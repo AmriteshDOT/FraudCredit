@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kotak-fraudshield-actuator
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kotak-fraudshield-actuator
+  template:
+    metadata:
+      labels:
+        app: kotak-fraudshield-actuator
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: actuator
+          image: kotak-fraudshield:latest
+          ports:
+            - name: http
+              containerPort: 8000
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: http
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            failureThreshold: 2
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
